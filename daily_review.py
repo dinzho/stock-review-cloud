@@ -12,12 +12,6 @@ if not FEISHU_WEBHOOK:
     print("⚠️ 未設置 FEISHU_WEBHOOK_URL")
     exit()
 
-# === 🚀 DEBUG 測試代碼（添加這裡）===
-print("🚀 [DEBUG] 腳本開始執行")
-print(f"🔑 Webhook 長度: {len(FEISHU_WEBHOOK) if FEISHU_WEBHOOK else 0}")
-print(f"🔑 Webhook 前 20 字: {FEISHU_WEBHOOK[:20] if FEISHU_WEBHOOK else 'N/A'}")
-# === DEBUG 結束 ===
-
 # 統一使用腳本所在目錄作為基準路徑（兼容本地與雲端）
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "daily_data"
