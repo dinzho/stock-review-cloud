@@ -18,12 +18,30 @@ DATA_DIR = BASE_DIR / "daily_data"
 DATA_DIR.mkdir(exist_ok=True)
 
 def is_trading_day():
-    today = datetime.datetime.now().date()
-    if today.weekday() >= 5: return False
+    # 使用 UTC 時間（GitHub 伺服器標準），避免時區換算誤差
+    today = datetime.datetime.utcnow().date()
+    today_str = today.strftime("%Y-%m-%d")
+
+    # 1. 週末直接跳過
+    if today.weekday() >= 5:
+        print(f"📅 今日 ({today_str}) 為週末，跳過執行。")
+        return False
+
+    # 2. 比對 A 股交易日曆（加入格式容錯）
     try:
-        dates = ak.tool_trade_date_hist_sina()["trade_date"].values
-        return today.strftime("%Y-%m-%d") in dates
-    except: return True
+        df = ak.tool_trade_date_hist_sina()
+        # 統一轉為 YYYY-MM-DD 字串格式，避免比對失敗
+        trade_dates = pd.to_datetime(df["trade_date"]).dt.strftime("%Y-%m-%d").values
+        if today_str in trade_dates:
+            print(f"✅ 今日 ({today_str}) 為交易日，開始抓取數據...")
+            return True
+        else:
+            print(f"📅 今日 ({today_str}) 為 A 股休市日，跳過執行。")
+            return False
+    except Exception as e:
+        # 網絡或 API 異常時，只要是週一至週五就預設執行
+        print(f"⚠️ 交易日曆查詢失敗 ({e})，預設為工作日執行。")
+        return True
 
 def fetch_market_data():
     data = {"date": datetime.datetime.now().strftime("%Y-%m-%d"), "indices": {}, "funds": {}, "sectors": {}, "tech": {}}
